@@ -1,5 +1,10 @@
 # restatejs
-
+restatejs is new global state management library for react which focus on simplicity and productivity.restatejs is context-less so you don't need to wrap your react app in Provider or Context.
+- restatejs is context-less
+- restatejs is controller for manage code
+- restatejs supports persist state 
+- restate js supports async (like redux-thunk) and *generators (like redux-saga)
+- restatejs uses default react useState() hook under the hood so no need other debuging extentions
 # install
 ```bash
 npm install  @hodev/restatejs
@@ -51,12 +56,17 @@ pass group and name of the controller you wnat to connect
   const [state,status] = useController(counterGroup, 'counterController');
 ```
 if gives you state and status of state of controller
-
 state has 3 state
 - LOADING : 0
 - SUCCESS:1
 - FAILED: 2
-
+```ts
+import {statusTypes} from '@hodev/restatejs'
+```
+then you can use then like this:
+```ts
+(status === statusTypes.LOADING) ? "do soemthing" : "do somethign else"
+```
 ## component will get connected like this
 ```ts
 import { useController } from '@hodev/restatejs';
@@ -77,9 +87,8 @@ export default App;
 ```
 
 # Run Method
-group has run() method on it but it has its way to run component method.
-as you see first we pass string wich contain name of controller (here is CounterController) and we put method we want to run after `@`
-so what it does it searches for counterController inside group and run desired method on that
+group has run() method but it has it's own way to run method.
+as you see firstly we pass string which contain name of the controller (here is counterController) and we put method name that we want to run after `@`
 ### inc is function we decleared inside our controller  
 ```ts
  counterGroup.run('counterController@inc', [], counter);
