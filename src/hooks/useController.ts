@@ -1,4 +1,5 @@
-import React from '../../../react-commander-web/node_modules/react/';
+// import React from '../../../react-commander-web/node_modules/react';
+import React from 'react';
 
 enum statusTypes {
   LOADING,
