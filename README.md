@@ -117,6 +117,25 @@ export default App;
 ```
 
 # persist data
+**react native** 
+- async storage
+
+**web browser**
+- localStorage
+
+it should be passed to group constructor 
+example:
+for web
+```ts
+const counterGroup: IGroup = new Group(localStorage);
+```
+or
+for react native
+```ts
+const counterGroup: IGroup = new Group(AsyncStorage);
+```
+then 
+
 to persist data just add persist key to your controller then `restatejs` does the job 
 ```ts
 {
