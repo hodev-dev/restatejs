@@ -1,30 +1,26 @@
 import { isEqual, isPlainObject, reduce } from 'lodash';
 import ControllerStorage from './ControllerStorage';
-import { useController } from './useController';
+import { IBasicController, IController, IGroup } from './types/IController';
 
-export { useController };
-
-export default class ControllerGroup {
-  controllers: any;
+class Group implements IGroup {
+  controllers: IController[];
   storage: any;
-  constructor() {
+  hook: any;
+  constructor(bridge: any) {
     this.controllers = [];
-    this.storage = new ControllerStorage();
+    this.storage = new ControllerStorage(bridge);
   }
-
-  subscribe(_controller: any) {
+  /**
+   * add controller to the group to add new properties so it can be used in other controllers  
+   *
+   * @param {Array<IBasicController>} controller
+   * @memberof Group
+   */
+  add(_controller: Array<IBasicController>) {
     _controller.forEach((controller: any) => {
       controller.state = [];
-      controller.callHistroy = [];
-      controller.connect = (_state: any, _handler: any) => {
-        controller.state.push([_state, _handler]);
-      }
-      controller.pushToCallHistory = (_caller: any) => {
-        controller.callHistroy.push(_caller);
-        if (controller.callHistroy.length > 5) {
-          controller.callHistroy.shift();
-        }
-      }
+      controller.http = undefined;
+      controller.mount = false;
       controller.setState = (_new_state: any, _prevState: any, _caller: any) => {
         controller.state
           .forEach(async (_state: any) => {
@@ -35,15 +31,16 @@ export default class ControllerGroup {
               this.storage.clear();
             }
             controller.default = _new_state;
-            handler(_new_state);
+            if (controller.mount === true) {
+              handler(_new_state);
+            }
           });
-        controller.onChange(controller, this, _new_state, _prevState);
+        if (controller.onChange !== undefined) {
+          controller.onChange(controller, this, _new_state, _prevState);
+        }
       }
       controller.getState = () => {
         return controller.state[0];
-      }
-      controller.compare = (_prev_state: any, _next_state: any) => {
-        return isEqual(_prev_state, _next_state)
       }
       controller.diff = function (_prev_state: any, _new_state: any) {
         return reduce(_prev_state, (result: any, value: any, key: any) => {
@@ -55,19 +52,24 @@ export default class ControllerGroup {
           return result;
         }, {});
       }
+      controller.isEqual = (_prev_state, _new_state) => {
+        return isEqual(_prev_state, _new_state);
+      }
       this.controllers.push(controller);
     });
   }
 
-  unsubscribe(_controller_name: any) {
-    this.controllers
-      .filter((_controller: any) => {
-        return _controller.name === _controller_name;
-      })
-      .forEach((_controller: any) => {
-        _controller.state = [];
-      });
-  }
+  /**
+   * select controller in group and run method of that controller
+   * 
+   * @param {*} controller_name
+   * ```js
+   * controller_name`@`method
+   * ```` 
+   * @param {*} input
+   * @param {*} states
+   * @memberof Group
+   */
   run(_method: any, _input: any, _states: any) {
     const state_name = _method.substr(0, _method.search('@'));
     const method_name = _method.substr(_method.search('@') + 1, _method.length);
@@ -83,13 +85,6 @@ export default class ControllerGroup {
       return controller.name === _controller_name;
     }).forEach((_controller: any) => {
       _controller.state.push(_handler);
-    });
-  }
-  setState(name: any, new_state: any) {
-    this.controllers.filter((controller: any) => {
-      return controller.name === name;
-    }).forEach((controller: any) => {
-      controller.onChange(controller, this, new_state);
     });
   }
   getDefault(_controller_name: any) {
@@ -110,11 +105,24 @@ export default class ControllerGroup {
     });
     return _controller;
   }
-  getPlatform() {
-    this.storage.platform;
+  mount(_controller_name) {
+    this.controllers.filter((controller: any) => {
+      return controller.name === _controller_name;
+    }).forEach((controller: any) => {
+      controller.mount = true;
+    });
+  }
+  unmount(_controller_name) {
+    this.controllers.filter((controller: any) => {
+      return controller.name === _controller_name;
+    }).forEach((controller: any) => {
+      controller.mount = false;
+    });
   }
   all() {
     this.controllers.forEach((controller: any) => console.log(controller));
   }
 }
+
+export { Group };
 
